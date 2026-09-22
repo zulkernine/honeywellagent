@@ -1,4 +1,5 @@
 import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { ChatMessage } from '../api/types'
 import { normalizeMarkdownTables } from '../utils/markdown'
 import ExecutionTimeBadge from './ExecutionTimeBadge'
@@ -34,7 +35,18 @@ export default function MessageBubble({ message }: { message: ChatMessage }) {
       <Avatar role="assistant" />
       <div className="max-w-[85%] min-w-0 rounded-2xl rounded-tl-sm border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 shadow-md shadow-slate-200/70 dark:border-white/10 dark:bg-slate-800/60 dark:text-slate-100 dark:shadow-slate-950/40">
         <div className="markdown">
-          <Markdown>{normalizeMarkdownTables(message.content)}</Markdown>
+          <Markdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              table: ({ node, ...props }) => (
+                <div className="my-2 max-w-full overflow-x-auto rounded-lg border border-slate-200 dark:border-white/10">
+                  <table className="min-w-full" {...props} />
+                </div>
+              ),
+            }}
+          >
+            {normalizeMarkdownTables(message.content)}
+          </Markdown>
         </div>
         <ToolCallTrace toolCalls={message.tool_calls ?? []} />
         {message.execution_time_ms !== undefined && (
