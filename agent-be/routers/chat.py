@@ -54,18 +54,26 @@ async def chat(session_id: str, body: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
     elapsed_ms = int((time.time() - start_ms) * 1000)
 
-    # ── 5. Extract answer + tool call trace ───────────────────────────────────
+    # ── 5. Extract answer + tool call trace (current turn only) ──────────────
     messages = result.get("messages", [])
+
+    # Find the index of the last HumanMessage to isolate the current request turn
+    last_human_idx = 0
+    for idx, msg in enumerate(messages):
+        if isinstance(msg, HumanMessage):
+            last_human_idx = idx
+
+    current_turn_messages = messages[last_human_idx:]
     answer = ""
     tool_calls_out: list[ToolCallOut] = []
     tool_call_id_map: dict[str, dict] = {}  # id → {name, args}
 
-    for msg in messages:
+    for msg in current_turn_messages:
         # Capture tool invocation metadata from AI messages with tool_calls
         if isinstance(msg, AIMessage) and msg.tool_calls:
             for tc in msg.tool_calls:
                 tool_call_id_map[tc["id"]] = {"name": tc["name"], "args": tc["args"]}
-        # Capture tool results
+        # Capture tool results for this turn
         elif isinstance(msg, ToolMessage):
             meta = tool_call_id_map.get(msg.tool_call_id, {})
             result_preview = str(msg.content)[:300]
@@ -77,8 +85,8 @@ async def chat(session_id: str, body: ChatRequest):
                 )
             )
 
-    # Final AI text response is the last AIMessage without tool_calls
-    for msg in reversed(messages):
+    # Final AI text response is the last AIMessage without tool_calls in this turn
+    for msg in reversed(current_turn_messages):
         if isinstance(msg, AIMessage) and not msg.tool_calls:
             answer = msg.content
             break
