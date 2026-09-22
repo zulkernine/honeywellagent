@@ -49,6 +49,30 @@ npm run dev
 
 ---
 
+## UI & Capabilities Showcase
+
+### 1. Expiring Certificates Inspection & Rich Tables
+Querying expiring certificates renders a rich markdown table with status, expiration dates, domain mappings, and tool call traces:
+![Expiring Certificates](./screenshot/02-expiring-certificates.png)
+
+### 2. Operational Renewal Action
+Raising a certificate renewal generates a traceable request with a unique request ID, updates certificate status in MongoDB, and reports execution timing:
+![Renewal Request](./screenshot/03-renewal-request.png)
+
+### 3. Revocation Verification & Security Advisories
+Verifying revocation checks CRL/OCSP status, reports compromise reasons (e.g., `keyCompromise`), and outlines immediate operational actions:
+![Revocation Verification](./screenshot/04-revocation-verification.png)
+
+### 4. Customer Certificate Inventory
+Filtering certificates by customer name with case-insensitive search and status badges:
+![Customer Certificate Inventory](./screenshot/05-customer-certificates.png)
+
+### 5. Multi-Customer Analytics & Overview
+Aggregating certificate metrics (total, active, expiring, revoked) across all enterprise organizations:
+![Customer Summary Overview](./screenshot/01-customer-summary.png)
+
+---
+
 ## Documentation Index
 
 | Document | Location | What's inside |
