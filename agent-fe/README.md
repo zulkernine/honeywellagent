@@ -4,6 +4,8 @@ React + Vite + TypeScript chat UI for the certificate operations agent. One page
 
 Stack: **Tailwind CSS v4** (light/dark theme), **TanStack Query** (server state, optimistic chat updates), **Zustand** (UI state), **react-markdown**, and an **Orval-generated** axios + react-query client.
 
+> 📐 For the full architecture, data-flow diagrams (layer diagram, chat optimistic-update flow, scroll management), markdown-table normalization, and the state-ownership matrix, see **[ARCHITECTURE.md](./ARCHITECTURE.md)**.
+
 ## Running
 
 The frontend expects the backend (`agent-be/`) running on port 8000:
@@ -49,5 +51,6 @@ Regenerate after any backend API change (`npm run generate`), then run `npm run 
 - The backend chat endpoint is **non-streaming** (single JSON response): sending a message optimistically appends your bubble plus a "thinking" placeholder, which is replaced by the answer, tool-call trace, and execution time when the response arrives.
 - In-memory agent state lives server-side (`MemorySaver`); the frontend loads history via `GET /api/sessions/{id}` when switching sessions.
 - Auto-scroll only follows new answers when you're already near the bottom; otherwise a "jump to latest" button appears.
+- Answers pass through a collapsed-table normalizer (`src/utils/markdown.ts`) before rendering, so LLM tables that arrived on one line still render as tables — details in ARCHITECTURE.md §4.
 - Enter sends, Shift+Enter adds a newline. Drafts are kept per session while navigating.
 - Theme switcher (light/dark) in the sidebar header; preference persists in `localStorage`.
