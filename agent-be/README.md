@@ -191,3 +191,27 @@ The LangGraph `MemorySaver` keeps conversation history in process RAM, keyed by 
 | `verify_revocation` | Check revocation status |
 | `generate_renewal_request` | Create renewal action + update cert status |
 | `list_certificates_by_customer` | Filter certs by customer name |
+| `list_customers` | Aggregate statistics across all customers |
+
+---
+
+## Technical Architecture & Deep Dive
+
+For the complete technical breakdown, see **[ARCHITECTURE.md](./ARCHITECTURE.md)**.
+
+### Data Flow Summary
+1. **Client Request**: `POST /api/chat/{session_id}` received by FastAPI.
+2. **Session & Memory Warmup**: Session resolved in MongoDB; in-memory `MemorySaver` warmed from DB history on cache miss.
+3. **Persist User Message**: Incoming user prompt stored in MongoDB `messages`.
+4. **LangGraph ReAct Execution**: Agent reasons, calls MongoDB tools asynchronously as needed, and synthesizes answers.
+5. **Trace & Metrics Extraction**: Captures tool inputs/outputs and execution duration.
+6. **Persist & Return**: Assistant response and tool trace saved in DB; structured `ChatResponse` returned.
+
+### Next Improvements & Roadmap
+- **Server-Sent Events (SSE) / WebSocket Streaming**: Stream answer tokens and live tool invocation events (`tool_start`, `tool_end`) to replace the polling/blocking request pattern.
+- **Stateless Server Architecture**: Migrate from in-memory `MemorySaver` to a distributed checkpointer (`RedisSaver` or `MongoDBSaver`) to enable horizontal multi-replica scalability behind load balancers.
+- **Asynchronous Task Queue**: Offload bulk certificate renewals and automated CA interactions to Celery/Temporal workers.
+- **Role-Based Access Control (RBAC)**: Enforce granular permissions between auditor roles and SecOps administrators.
+- **Hybrid RAG**: Index enterprise security and compliance standards in MongoDB Atlas Vector Search for policy-aware answers.
+- **Observability**: Integrate OpenTelemetry and Langfuse/LangSmith for tracing agent reasoning paths and latency breakdown.
+
