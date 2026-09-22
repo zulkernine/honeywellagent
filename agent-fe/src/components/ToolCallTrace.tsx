@@ -1,9 +1,20 @@
-import { AlertTriangle, ChevronDown, Wrench } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronDown, Wrench } from 'lucide-react'
 import { useState } from 'react'
 import type { ToolCall } from '../api/types'
 
 interface Props {
   toolCalls: ToolCall[]
+}
+
+function isToolError(summary: string): boolean {
+  if (!summary) return false
+  const lower = summary.toLowerCase()
+  return (
+    lower.includes('"error"') ||
+    lower.includes('error:') ||
+    lower.includes('failed') ||
+    lower.includes('not found')
+  )
 }
 
 export default function ToolCallTrace({ toolCalls }: Props) {
@@ -27,23 +38,46 @@ export default function ToolCallTrace({ toolCalls }: Props) {
       </button>
       {open && (
         <ol className="divide-y divide-slate-100 border-t border-slate-200 dark:divide-white/5 dark:border-t-white/10">
-          {toolCalls.map((tc, i) => (
-            <li key={i} className="px-3 py-2 text-xs">
-              <div className="flex items-baseline gap-2">
-                <span className="text-slate-400 dark:text-slate-500">{i + 1}.</span>
-                <code className="font-mono text-indigo-600 dark:text-indigo-300">
-                  {tc.tool_name}
-                </code>
-                <code className="font-mono text-slate-400 dark:text-slate-500">
-                  ({JSON.stringify(tc.args)})
-                </code>
-              </div>
-              <p className="mt-1 flex items-start gap-1.5 break-all pl-5 text-slate-500 dark:text-slate-400">
-                <AlertTriangle className="mt-0.5 size-3 shrink-0 text-emerald-500/80" />
-                <span>{tc.result_summary}</span>
-              </p>
-            </li>
-          ))}
+          {toolCalls.map((tc, i) => {
+            const hasError = isToolError(tc.result_summary)
+            return (
+              <li key={i} className="px-3 py-2 text-xs">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span className="text-slate-400 dark:text-slate-500">{i + 1}.</span>
+                  <code className="font-mono font-semibold text-indigo-600 dark:text-indigo-300">
+                    {tc.tool_name}
+                  </code>
+                  <code className="font-mono text-slate-400 dark:text-slate-500">
+                    ({JSON.stringify(tc.args)})
+                  </code>
+                  <span
+                    className={`ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                      hasError
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    }`}
+                  >
+                    {hasError ? (
+                      <>
+                        <AlertCircle className="size-2.5" />
+                        <span>ERROR</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="size-2.5" />
+                        <span>SUCCESS</span>
+                      </>
+                    )}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-start gap-1.5 break-all pl-4 text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[11px] leading-relaxed">
+                    {tc.result_summary}
+                  </span>
+                </div>
+              </li>
+            )
+          })}
         </ol>
       )}
     </div>

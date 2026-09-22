@@ -4,8 +4,17 @@ import { useCreateSession, useDeleteSession, useSessions } from '../hooks/useSes
 import { useUiStore } from '../store/uiStore'
 import ThemeToggle from './ThemeToggle'
 
-function relativeDate(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
+function relativeDate(iso?: string): string {
+  if (!iso) return ''
+  // Normalize ISO string: naive UTC timestamps from the backend (e.g. "2026-09-22T06:59:12.345678")
+  // lack a timezone specifier. Without 'Z' or offset, JavaScript parses them as local time,
+  // producing an incorrect time offset (e.g. 5h ago for UTC+5:30). Append 'Z' to force UTC parsing.
+  const normalizedIso =
+    !iso.endsWith('Z') && !/[+-]\d{2}(?::?\d{2})?$/.test(iso) ? `${iso}Z` : iso
+  const timestamp = new Date(normalizedIso).getTime()
+  if (Number.isNaN(timestamp)) return ''
+
+  const diff = Math.max(0, Date.now() - timestamp)
   const mins = Math.floor(diff / 60_000)
   if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m ago`
@@ -101,7 +110,7 @@ export default function Sidebar() {
                       {s.title}
                     </p>
                     <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                      {relativeDate(s.updated_at)}
+                      {relativeDate(s.updated_at || s.created_at)}
                     </p>
                   </div>
                   <button
